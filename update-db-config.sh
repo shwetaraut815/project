@@ -1,31 +1,47 @@
-
-
 #!/bin/bash
 
-set -e #immediately exit if any command fails
+set -e  # exit immediately on error
 
-war_path="target/LoginWebApp.war"
+# Absolute path to WAR file
+WAR_FILE="$WORKSPACE/target/LoginWebApp.war"
 
-rm -rf tmp-dir
-mkdir tmp-dir
-cd tmp-dir
+if [ ! -f "$WAR_FILE" ]; then
+    echo "WAR file not found: $WAR_FILE"
+    exit 1
+fi
 
-unzip -o "$war_path" -d tmp-dir   #extract war 
+# Temporary directory for extraction
+TMP_DIR="$WORKSPACE/tmp-war"
+rm -rf "$TMP_DIR"
+mkdir -p "$TMP_DIR"
 
-#update db config 
+# Extract WAR
+unzip -o "$WAR_FILE" -d "$TMP_DIR"
 
-user=admin
-pass=admin1234
-localhost=database-1.cevyoqyq8e62.us-east-1.rds.amazonaws.com
+# Update DB config inside extracted WAR
+DB_USER="admin"
+DB_PASS="admin1234"
+DB_HOST="database-1.cevyoqyq8e62.us-east-1.rds.amazonaws.com"
 
-config_file=LoginWebApp/src/main/webapp/userRegistration.jsp
+# Path inside extracted WAR
+CONFIG_FILE="$TMP_DIR/userRegistration.jsp"
 
-sed -i 's/"username"/"admin"/g' $config_file
-sed -i 's/"password"/"admin1234"/g' $config_file
-sed -i 's/localhost/$localhost/g' $config_file
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Config file not found: $CONFIG_FILE"
+    exit 1
+fi
 
-zip -r "$war_path" *   #updated war
+# Replace values
+sed -i "s/\"username\"/\"$DB_USER\"/g" "$CONFIG_FILE"
+sed -i "s/\"password\"/\"$DB_PASS\"/g" "$CONFIG_FILE"
+sed -i "s/localhost/$DB_HOST/g" "$CONFIG_FILE"
 
-cd ..
+# Repackage WAR
+cd "$TMP_DIR"
+zip -r "$WAR_FILE" ./*
+cd "$WORKSPACE"
 
+# Cleanup
+rm -rf "$TMP_DIR"
 
+echo "WAR updated successfully: $WAR_FILE"

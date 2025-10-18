@@ -10,7 +10,7 @@ rm -rf tmp-dir
 mkdir tmp-dir
 cd tmp-dir
 
-jar -xvf ../war_path   #extract war 
+unzip -o "$war_path" -d tmp-dir   #extract war 
 
 #update db config 
 
@@ -24,7 +24,7 @@ sed -i 's/"username"/"admin"/g' $config_file
 sed -i 's/"password"/"admin1234"/g' $config_file
 sed -i 's/localhost/$localhost/g' $config_file
 
-jar -cvf ../LoginWebApp   #updated war
+zip -r "$war_path" *   #updated war
 
 cd ..
 
